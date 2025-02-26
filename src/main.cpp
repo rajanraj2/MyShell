@@ -14,7 +14,7 @@ void executable_files(std::stringstream path, std::string command) {
     for (auto file : fs::directory_iterator(directory)) {
       if (file.path().filename() == command) {
         std::string value = file.path();
-        std::cout << "command is " << value  << "\n";
+        std::cout << command << " is " << value  << "\n";
         return;
       }
     }
