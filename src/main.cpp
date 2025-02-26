@@ -20,7 +20,7 @@ int main() {
     iss >> command;
 
     if (command == "echo") {
-      std::getline(iss, statement);
+      std::getline(iss >> std::ws, statement);
       std::cout << statement << "\n";
     }
     else std::cout << input << ": command not found\n";
