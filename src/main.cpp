@@ -4,53 +4,88 @@
 #include <unordered_set>
 #include <vector>
 #include <filesystem>
+#include <cstdlib>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 namespace fs = std::filesystem;
 
-void executable_files(std::stringstream path, std::string command) {
-  std::string directory;
-  while (std::getline(path, directory, ':')) {
-    // search at this directory for the required command, if it is found then print the path and return
-    for (auto file : fs::directory_iterator(directory)) {
-      if (file.path().filename() == command) {
-        std::string value = file.path();
-        std::cout << command << " is " << value  << "\n";
-        return;
-      }
+std::string find_executable(std::stringstream path, const std::string &command) {
+    std::string directory;
+    while (std::getline(path, directory, ':')) {
+        for (auto &file : fs::directory_iterator(directory)) {
+            if (file.path().filename() == command) {
+                return file.path();
+            }
+        }
     }
-  }
-  std::cout << command << ": not found\n";
+    return "";
 }
 
+void run_executables(std::vector<std::string> args) {
+  if (args.empty()) return;
+
+  char* cmd = args[0].data();
+  std::vector<char*> argv;
+  for (auto& arg : args) argv.push_back(arg.data());
+  argv.push_back(nullptr); 
+
+  if (fork() == 0) { 
+      execvp(cmd, argv.data());
+      std::cerr << cmd << ": command not found\n";
+      exit(1);
+  } 
+  wait(nullptr);
+}
+
+
 int main() {
-  // Flush after every std::cout / std:cerr
-  std::cout << std::unitbuf;
-  std::cerr << std::unitbuf;
- 
-  std::cout << "$ ";
-
-  std::string input;
-  std::unordered_set<std::string> builtin_commands = {"echo", "type", "exit"};
-
-  std::string path = std::getenv("PATH");
-  
-  while (true) {
-    std::getline(std::cin, input);
-    if (input == "exit 0") break;
-
-    std::istringstream iss(input);
-    std::string command, statement;
-    iss >> command;
-    std::getline(iss >> std::ws, statement);
-
-
-    if (command == "echo") std::cout << statement << "\n";
-    else if (command == "type") {
-      if (builtin_commands.find(statement) != builtin_commands.end()) std::cout << statement << " is a shell builtin\n";
-      else executable_files(std::stringstream(path), statement);
-    }
-    else std::cout << input << ": command not found\n";
-    
+    std::cout << std::unitbuf;
+    std::cerr << std::unitbuf;
     std::cout << "$ ";
-  }
+
+    std::string input;
+    std::unordered_set<std::string> builtin_commands = {"echo", "type", "exit"};
+    std::string path = std::getenv("PATH");
+
+    while (true) {
+        std::getline(std::cin, input);
+        if (input == "exit 0") break;
+
+        std::istringstream iss(input);
+        std::string command;
+        std::vector<std::string> args;
+
+        while (iss >> command) {
+            args.push_back(command);
+        }
+
+        if (args.empty()) {
+            std::cout << "$ ";
+            continue;
+        }
+
+        if (args[0] == "echo") {
+            for (size_t i = 1; i < args.size(); ++i) {
+                if (i > 1) std::cout << " ";
+                std::cout << args[i];
+            }
+            std::cout << "\n";
+        } else if (args[0] == "type") {
+            if (builtin_commands.find(args[1]) != builtin_commands.end())
+                std::cout << args[1] << " is a shell builtin\n";
+            else {
+                std::string exe_path = find_executable(std::stringstream(path), args[1]);
+                if (!exe_path.empty()) std::cout << args[1] << " is " << exe_path << "\n";
+                else std::cout << args[1] << ": not found\n";
+            }
+        } else {
+            run_executables(args);
+        }
+
+        std::cout << "$ ";
+    }
+
+    return 0;
 }
