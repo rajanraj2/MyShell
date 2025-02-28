@@ -11,7 +11,7 @@
 
 namespace fs = std::filesystem;
 
-const std::unordered_set<std::string> builtin_commands = {"echo", "type", "exit"};
+const std::unordered_set<std::string> builtin_commands = {"echo", "type", "exit", "pwd"};
 
 std::string find_executable(const std::string &command) {
     std::string path = std::getenv("PATH");
