@@ -45,7 +45,10 @@ void run_executables(const std::vector<std::string> &args) {
 }
 
 void handle_builtin_commands(const std::vector<std::string> &args) {
-    if (args[0] == "echo") {
+    if (args[0] == "pwd") {
+      std::cout << fs::current_path() << "\n";
+    }
+    else if (args[0] == "echo") {
         for (size_t i = 1; i < args.size(); ++i) {
             if (i > 1) std::cout << " ";
             std::cout << args[i];
@@ -59,8 +62,8 @@ void handle_builtin_commands(const std::vector<std::string> &args) {
         if (builtin_commands.find(args[1]) != builtin_commands.end()) {
             std::cout << args[1] << " is a shell builtin\n";
         } else {
-            std::string exe_path = find_executable(args[1]);
-            if (!exe_path.empty()) std::cout << args[1] << " is " << exe_path << "\n";
+            std::string exe_path = find_executable(args[1]); 
+            if(!exe_path.empty()) std::cout << args[1] << " is " << exe_path << "\n";
             else std::cout << args[1] << ": not found\n";
         }
     }
