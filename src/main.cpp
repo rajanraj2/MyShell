@@ -46,7 +46,8 @@ void run_executables(const std::vector<std::string> &args) {
 
 void handle_builtin_commands(const std::vector<std::string> &args) {
     if (args[0] == "pwd") {
-      std::cout << fs::current_path() << "\n";
+      std::string cur_path = fs::current_path();
+      std::cout << cur_path << "\n";
     }
     else if (args[0] == "echo") {
         for (size_t i = 1; i < args.size(); ++i) {
