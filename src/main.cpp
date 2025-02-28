@@ -11,7 +11,7 @@
 
 namespace fs = std::filesystem;
 
-const std::unordered_set<std::string> builtin_commands = {"echo", "type", "exit", "pwd"};
+const std::unordered_set<std::string> builtin_commands = {"echo", "type", "exit", "pwd", "cd"};
 
 std::string find_executable(const std::string &command) {
     std::string path = std::getenv("PATH");
@@ -45,7 +45,16 @@ void run_executables(const std::vector<std::string> &args) {
 }
 
 void handle_builtin_commands(const std::vector<std::string> &args) {
-    if (args[0] == "pwd") {
+    if (args[0] == "cd") {
+      try {
+        std::string destination = args[1];
+        fs::current_path(destination);
+      }
+      catch (...) {
+        std::cout << "cd: " << args[1] << ": No such file or directory\n";
+      }
+    } 
+    else if (args[0] == "pwd") {
       std::string cur_path = fs::current_path();
       std::cout << cur_path << "\n";
     }
